@@ -1,0 +1,125 @@
+from dotenv import load_dotenv
+load_dotenv()
+import os
+import requests
+from datetime import datetime, timedelta
+import re
+from dateutil.parser import parse
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+# ------------- CONFIGS ---------------------
+SERPER_API_KEY = os.getenv("SERPER_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+MODEL_NAME = "gemini-1.5-flash"
+
+# ------------- UTILS ---------------------
+
+def parse_natural_date(text):
+    text = text.lower()
+    today = datetime.today()
+    if "tomorrow" in text:
+        return today + timedelta(days=1)
+    elif "day after tomorrow" in text:
+        return today + timedelta(days=2)
+    elif "yesterday" in text:
+        return today - timedelta(days=1)
+    elif "day before yesterday" in text:
+        return today - timedelta(days=2)
+    else:
+        try:
+            return parse(text, fuzzy=True)
+        except:
+            return None
+
+def detect_personality_prefs(user_input):
+    personalities = [
+        "Adventurous", "Relaxed", "Foodie", "Cultural Explorer",
+        "Party Animal", "Solo Traveler", "Family-Oriented"
+    ]
+    found = [p for p in personalities if p.lower() in user_input.lower()]
+    return found or ["Relaxed"]  # default
+
+def extract_destination(user_input):
+    # very simple for now – can use NER or regex on actual location list
+    match = re.search(r'trip to ([a-zA-Z\s]+)', user_input)
+    return match.group(1).strip() if match else "Paris"
+
+# ------------- CUSTOM SERPER TOOL ---------------------
+
+class SerperSearch:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.url = "https://google.serper.dev/search"
+
+    def search(self, query):
+        headers = {
+            "X-API-KEY": self.api_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "q": query
+        }
+        response = requests.post(self.url, headers=headers, json=payload)
+        results = response.json()
+        return results.get("organic", [])
+
+# ------------- GEMINI SETUP ---------------------
+
+llm = ChatGoogleGenerativeAI(
+    model=MODEL_NAME,
+    verbose=True,
+    temperature=0.5,
+    google_api_key=GOOGLE_API_KEY
+)
+
+# ------------- CORE FUNCTIONS ---------------------
+
+def generate_itinerary(user_input):
+    destination = extract_destination(user_input)
+    personalities = detect_personality_prefs(user_input)
+    date_obj = parse_natural_date(user_input) or datetime.today()
+    search = SerperSearch(SERPER_API_KEY)
+
+    print(f"✈️ Destination: {destination}")
+    print(f"🧠 Personality: {personalities}")
+    print(f"📅 Travel Date: {date_obj.strftime('%Y-%m-%d')}")
+
+    query = f"{destination} events, activities, restaurants for {', '.join(personalities)} travelers"
+    results = search.search(query)
+
+    if not results:
+        return "No travel data found for this destination and personality."
+
+    context = "\n".join([
+        f"Title: {r['title']}\nLink: {r['link']}\nSnippet: {r['snippet']}"
+        for r in results[:5]
+    ])
+
+    prompt = f"""
+    Based on the user's personality {personalities} and their travel destination {destination} on {date_obj.strftime('%B %d, %Y')},
+    generate a 3-day detailed travel itinerary.
+
+    Use this context:
+    {context}
+
+    Include restaurants, cultural activities, entertainment, and local secrets.
+    Be specific and align with the user's interest.
+
+    Return in markdown format.
+    """
+
+    response = llm.invoke(prompt)
+    return response
+
+# ------------- MAIN ---------------------
+if __name__ == "__main__":
+    print("📍 Welcome to the Travel Planner!")
+    user_input = input("Tell me your travel plan (e.g., 'I want a trip to Tokyo next Friday, I'm a foodie and love history'):\n")
+    itinerary = generate_itinerary(user_input)
+
+    with open("travel_itinerary.md", "w", encoding='utf-8') as f:
+        f.write(itinerary.content)  # ✅ Fix: Extract AIMessage content
+
+
+    print("\n✅ Itinerary saved to `travel_itinerary.md`")
+

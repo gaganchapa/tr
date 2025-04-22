@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}API Keys Configuration - Travel Planner Assistant{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">API Keys Configuration</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        This application requires API keys for the following services to function properly:
+                    </p>
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>Required API Keys:</h5>
+                        <ul class="mb-0">
+                            <li><strong>Google API Key</strong> - For the LLM (Gemini) functionality to generate travel plans and answer questions.</li>
+                            <li><strong>Serper API Key</strong> - For retrieving up-to-date information about destinations.</li>
+                        </ul>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">Current API Keys</h5>
+                    {% if api_keys %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Key (Masked)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key in api_keys %}
+                                    <tr>
+                                        <td>{{ key.name }}</td>
+                                        <td>{{ key.key|slice:":5" }}***************</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger delete-key" data-id="{{ key.id }}">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i> No API keys configured yet. Add the required keys below.
+                        </div>
+                    {% endif %}
+                    
+                    <h5 class="mt-4 mb-3">Add New API Key</h5>
+                    <form method="post" action="{% url 'api_keys' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">API Key Name</label>
+                            <select name="name" id="name" class="form-select" required>
+                                <option value="" selected disabled>Select API Key Type</option>
+                                <option value="google">Google API Key (for Gemini LLM)</option>
+                                <option value="serper">Serper API Key (for Search)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="key" class="form-label">API Key Value</label>
+                            <input type="text" name="key" id="key" class="form-control" required placeholder="Enter your API key">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save API Key
+                        </button>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'home' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to delete buttons
+        document.querySelectorAll('.delete-key').forEach(button => {
+            button.addEventListener('click', function() {
+                const keyId = this.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+                    // Send delete request
+                    fetch(`/api-keys/delete/${keyId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload the page
+                            window.location.reload();
+                        } else {
+                            alert('Failed to delete the API key. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting API key:', error);
+                        alert('An error occurred. Please try again.');
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

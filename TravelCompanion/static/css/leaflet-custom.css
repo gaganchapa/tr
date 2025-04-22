@@ -1,0 +1,91 @@
+/* Custom Leaflet CSS */
+
+/* Destination marker (primary location) */
+.destination-marker {
+    background-color: #FF5C62;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    display: block;
+}
+
+/* Place marker (points of interest) */
+.place-marker {
+    background-color: #3388ff;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+    display: block;
+}
+
+/* Custom popup styles */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-popup-content {
+    margin: 13px 19px;
+    line-height: 1.4;
+}
+
+.popup-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.popup-description {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Custom marker clusters */
+.marker-cluster-small {
+    background-color: rgba(255, 92, 98, 0.4);
+}
+
+.marker-cluster-small div {
+    background-color: rgba(255, 92, 98, 0.6);
+}
+
+.marker-cluster-medium {
+    background-color: rgba(255, 92, 98, 0.5);
+}
+
+.marker-cluster-medium div {
+    background-color: rgba(255, 92, 98, 0.7);
+}
+
+.marker-cluster-large {
+    background-color: rgba(255, 92, 98, 0.6);
+}
+
+.marker-cluster-large div {
+    background-color: rgba(255, 92, 98, 0.8);
+}
+
+.marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
+}
+
+.marker-cluster div {
+    width: 30px;
+    height: 30px;
+    margin-left: 5px;
+    margin-top: 5px;
+    text-align: center;
+    border-radius: 15px;
+    font-size: 12px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Travel Planner Assistant{% endblock %}
+
+{% block content %}
+<div class="row full-height g-0">
+    <!-- Left Column - Itinerary -->
+    <div class="col-md-3 sidebar">
+        <div class="itinerary-container">
+            <h4 class="mb-3">Itineraries</h4>
+            
+            <div id="api-warning" class="api-warning" style="display: none;">
+                <p><strong>API Keys Required!</strong></p>
+                <p>To use all features of the Travel Planner, please add your API keys:</p>
+                <ul>
+                    <li>Google API Key (for LLM functionality)</li>
+                    <li>Serper API Key (for search functionality)</li>
+                </ul>
+                <a href="{% url 'api_keys' %}" class="btn btn-warning btn-sm">Configure API Keys</a>
+            </div>
+            
+            <div id="itineraries-list" class="list-group mb-4">
+                <!-- Itineraries will be loaded here -->
+                <div class="text-center p-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="active-itinerary">
+                <h5 id="itinerary-title" class="mb-3">
+                    <i class="fas fa-route me-2"></i>No Itinerary Selected
+                </h5>
+                <div id="itinerary-days" class="mb-4">
+                    <!-- Day-by-day itinerary will be loaded here -->
+                </div>
+                <div id="places-section" class="mt-4 d-none">
+                    <h6 class="mb-2">
+                        <i class="fas fa-map-pin me-2"></i>Places to Visit
+                    </h6>
+                    <div id="place-list" class="place-list">
+                        <!-- Places will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Middle Column - Map and Chat -->
+    <div class="col-md-9">
+        <div class="row h-100 g-0">
+            <!-- Map section -->
+            <div class="col-12">
+                <div class="map-container p-3">
+                    <h4 class="mb-3">
+                        <i class="fas fa-map-marked-alt me-2"></i>Destination Map
+                        <span id="destination-name" class="ms-2 fw-normal text-secondary fs-6"></span>
+                    </h4>
+                    <div id="map" style="height: 100%; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+            </div>
+            
+            <!-- Chat section -->
+            <div class="col-12">
+                <div class="chat-container">
+                    <h4 class="p-3 mb-0">
+                        <i class="fas fa-comments me-2"></i>Travel Assistant
+                        <span id="typing-indicator" class="ms-2 d-none">
+                            <small class="text-muted fst-italic">Typing</small>
+                            <span class="typing-indicator">
+                                <span class="dot">.</span>
+                                <span class="dot">.</span>
+                                <span class="dot">.</span>
+                            </span>
+                        </span>
+                    </h4>
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Chat messages will be loaded here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <form id="chat-form" class="d-flex flex-column">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <input type="text" id="chat-input" class="form-control" 
+                                    placeholder="Ask a travel question or use /add to create an itinerary..."
+                                    autocomplete="off">
+                                <button type="submit" id="send-button" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="command-tip mt-2">
+                                <strong>Tip:</strong> Type <code>/add</code> followed by your travel destination to create an itinerary. For example: <code>/add 3 days in Paris</code>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
